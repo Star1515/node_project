@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src="https://cdn.socket.io/3.1.1/socket.io.min.js" integrity="sha384-gDaozqUvc4HTgo8iZjwth73C6dDDeOJsAgpxBcMpZYztUfjHXpzrpdrHRdVp8ySO" crossorigin="anonymous"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Messenger</title>
+</head>
+<body>
+<h4 id="user_name">Введите своё имя.</h4>
+<div id="users_online"></div>
+<input type="text" id="input" autofocus>
+<input type="submit" id="send" value="Send">
+<div id="messages"></div>
+</body>
+
+<script type="text/javascript">
+    const socket = io('localhost:3000');
+
+    let userName = '';
+
+    const addMessage = (message) => {
+        const msgSpan = document.createElement('span').innerHTML = `${message.user}: ${message.message}`
+        document.getElementById('messages').append(msgSpan);
+        document.getElementById('messages').append(document.createElement('br'));
+    };
+
+    socket.on('connect', () => {
+        console.log('Successful connected to server');
+    });
+
+    socket.on('init_user', (data)=>{
+        userName = data
+        document.getElementById('user_name').innerText = `Это Ваш идентификатор сесии: ${userName}`;
+    })
+
+    socket.on('new_connection', (data) => {
+        addMessage(data);
+    });
+
+    socket.on('server-users', (data) =>{
+        document.getElementById('users_online').innerHTML = data;
+    })
+
+    socket.on('server-msg',  (data) => {
+        addMessage(data);
+    });
+
+    document.getElementById('send').onclick = () => {
+        socket.emit('client-msg', { message: document.getElementById('input').value, user: userName   });
+        document.getElementById('input').value = '';
+    };
+
+</script>
+
+</html>
